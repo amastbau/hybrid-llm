@@ -162,7 +162,7 @@ Output ONLY the CLAUDE.md content in markdown. No explanation around it."""
         headers={"Content-Type": "application/json"},
     )
 
-    resp = urllib.request.urlopen(req, timeout=120)
+    resp = urllib.request.urlopen(req, timeout=300)
     data = json.loads(resp.read().decode())
 
     content = data["choices"][0]["message"]["content"]
