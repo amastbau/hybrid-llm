@@ -12,7 +12,7 @@ Run LLMs locally — on your phone, your PC, or both. No cloud, no API keys, ful
 
 ## Quick start
 
-**PC (Ollama):**
+**PC/Server (Ollama):**
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ollama run gemma2:2b
