@@ -19,8 +19,8 @@ A practical guide for engineers who want to run LLMs locally — no cloud, no AP
 See [deploy_llm.py](deploy_llm.py) — plug in your phone, run the script, get an API.
 
 ```bash
-git clone https://github.com/amastbau/claude-workspace.git
-cd claude-workspace/android-llm
+git clone https://github.com/amastbau/hybrid-llm.git
+cd hybrid-llm
 python deploy_llm.py
 ```
 
