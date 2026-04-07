@@ -2,6 +2,8 @@
 
 A practical guide for engineers who want to run LLMs locally — no cloud, no API keys, full privacy.
 
+> **Note:** Performance numbers (tok/s, RAM usage, speeds) throughout this guide are approximate estimates and have not been independently verified. Your actual results will vary depending on hardware, model version, quantization, and workload.
+
 ## Two paths
 
 | | Phone (Android via USB) | PC / Bare Metal |
