@@ -186,6 +186,50 @@ export OPENAI_API_KEY=unused
 
 ---
 
+## Example: Generate CLAUDE.md with a local model (save cloud tokens)
+
+A practical example of offloading work to a local model. Instead of using cloud API tokens
+to generate a `CLAUDE.md` file for your project, let a local model do it for free:
+
+```bash
+# Make sure Ollama is running with a coding model
+ollama pull qwen2.5-coder:7b
+
+# Preview what it generates
+python examples/generate-claude-md.py /path/to/your/project
+
+# Happy with it? Write it out
+python examples/generate-claude-md.py /path/to/your/project --write
+```
+
+The script keeps token usage minimal by:
+- Sampling only the first 30 lines of key files (not entire files)
+- Limiting directory tree depth to 3 levels
+- Capping output at 1500 tokens
+- Using low temperature (0.3) for deterministic output
+
+At the end it shows you what it would have cost on a cloud API vs $0.00 locally:
+```
+  Input: ~1200 tokens (4800 chars)
+  Output: 850 tokens
+  Speed: 12.3 tok/s
+  Cloud cost (estimated): $0.0163
+  Local cost: $0.0000
+```
+
+It also works with the phone endpoint:
+```bash
+python examples/generate-claude-md.py /path/to/project \
+  --endpoint http://localhost:8080/v1/chat/completions \
+  --model local
+```
+
+> **Tip:** Always review and edit the output — local models are good enough to get 80% of the way there, then you polish the last 20% by hand.
+
+See [examples/generate-claude-md.py](examples/generate-claude-md.py) for the full script.
+
+---
+
 ## Quick comparison: Cloud vs Private Metal
 
 | | Cloud (OpenAI/Anthropic) | Private Metal (Ollama) |
