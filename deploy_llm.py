@@ -249,7 +249,7 @@ def start_server(device_server: str, device_model: str, port: int):
         f" --host 0.0.0.0"
         f" --port {port}"
         f" --n-gpu-layers 99"   # offload to GPU/NPU
-        f" --ctx-size 2048"
+        f" --ctx-size 4096"
         f" --threads 4"         # Exynos 2400e has 8 cores, use 4
         f" > /data/local/tmp/llama-server.log 2>&1 &"
     ]
