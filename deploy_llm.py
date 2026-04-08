@@ -272,6 +272,17 @@ def start_server(device_server: str, device_model: str, port: int):
 
 # ─── Step 5: Port forwarding ────────────────────────────────────────────────
 
+def get_device_wifi_ip():
+    """Get the phone's WiFi IP address."""
+    result = adb("shell", "ip", "addr", "show", "wlan0", check=False)
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if line.startswith("inet "):
+            ip = line.split()[1].split("/")[0]
+            return ip
+    return None
+
+
 def setup_port_forward(port: int):
     section("Step 5: ADB port forwarding")
     adb("forward", f"tcp:{port}", f"tcp:{port}")
@@ -407,10 +418,16 @@ def main():
             else:
                 lan_info = "\n  (socat not installed — skipping LAN exposure)"
 
+        # Get WiFi IP for wireless access
+        wifi_ip = get_device_wifi_ip()
+        wifi_info = ""
+        if wifi_ip:
+            wifi_info = f"\n  WiFi endpoint:  http://{wifi_ip}:{args.port}/v1/chat/completions  (no cable needed)"
+
         section("READY")
         print(f"""
-  Endpoint:       http://localhost:{args.port}/v1/chat/completions
-  Model:          {MODELS[args.model]['name']}{lan_info}
+  USB endpoint:   http://localhost:{args.port}/v1/chat/completions
+  Model:          {MODELS[args.model]['name']}{wifi_info}{lan_info}
   Device:         {info['model']} ({info['soc']})
   Server PID:     {pid}
 
@@ -418,6 +435,9 @@ def main():
     curl http://localhost:{args.port}/v1/chat/completions \\
       -H "Content-Type: application/json" \\
       -d '{{"model":"local","messages":[{{"role":"user","content":"Hello!"}}]}}'
+
+  Go wireless (unplug cable, use WiFi):
+    curl http://{wifi_ip or '<phone-ip>'}:{args.port}/v1/chat/completions ...
 
   Stop server:
     adb shell kill {pid}

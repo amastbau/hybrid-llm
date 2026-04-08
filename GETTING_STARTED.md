@@ -30,6 +30,39 @@ python deploy_llm.py
 
 **Important:** Ollama is still needed on your PC for embeddings if you use [source-pad](https://github.com/amastbau/source-pad) for RAG. The phone only serves chat completions, not embeddings.
 
+### Wireless mode (no cable after setup)
+
+The initial deploy requires USB to push the binary and model. After that, the server listens on all interfaces — you can unplug the cable and access it over WiFi:
+
+```bash
+# During deploy, the script shows the WiFi endpoint:
+#   WiFi endpoint:  http://192.168.1.42:8080/v1/chat/completions  (no cable needed)
+
+# Or find it manually:
+adb shell "ip addr show wlan0 | grep 'inet '"
+# inet 192.168.1.42/24 ...
+
+# Unplug the cable. Hit the phone directly:
+curl http://192.168.1.42:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"local","messages":[{"role":"user","content":"Hello"}]}'
+```
+
+**Tips for reliable wireless mode:**
+- Keep the phone plugged into **power** (not PC) — inference drains battery fast
+- Enable **Stay awake while charging** (Developer Options)
+- Disable **Adaptive battery** (Settings > Battery)
+- Run `/phone-optimize` to kill background apps that steal CPU/memory
+
+**ADB over WiFi** (optional — for remote management without USB):
+```bash
+# While still connected via USB:
+adb tcpip 5555
+# Now unplug. Connect wirelessly:
+adb connect 192.168.1.42:5555
+# Full ADB access over WiFi
+```
+
 ---
 
 ## Windows Setup
