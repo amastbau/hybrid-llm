@@ -6,7 +6,7 @@ A practical guide for engineers who want to run LLMs locally — no cloud, no AP
 
 ## Two paths
 
-| | Phone (Android via USB) | PC / Bare Metal |
+| | Phone (Android via USB) | PC / Local Server |
 |---|---|---|
 | **Hardware** | Any modern Android phone | Any x86_64 Linux box |
 | **GPU needed?** | No (uses phone's NPU) | No (CPU works), GPU is faster |
@@ -22,7 +22,7 @@ See the [hybrid-llm](https://github.com/amastbau/hybrid-llm) repo for full instr
 
 ---
 
-## Option 2: PC / Bare Metal Server (recommended for real use)
+## Option 2: PC / Local Server
 
 ### Step 1: Install Ollama (easiest way)
 
