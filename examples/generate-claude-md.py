@@ -187,6 +187,7 @@ Output ONLY the CLAUDE.md content in markdown. No explanation around it."""
 
 KNOWN_ENDPOINTS = [
     {"name": "Ollama", "url": "http://localhost:11434", "health": "/api/tags", "api": "/v1/chat/completions"},
+    {"name": "Llama Stack", "url": "http://localhost:8321", "health": "/v1/models", "api": "/v1/chat/completions", "type": "llama-stack"},
     {"name": "Phone (USB)", "url": "http://localhost:8080", "health": "/health", "api": "/v1/chat/completions"},
     {"name": "Phone (alt)", "url": "http://localhost:8081", "health": "/health", "api": "/v1/chat/completions"},
     {"name": "LM Studio", "url": "http://localhost:1234", "health": "/v1/models", "api": "/v1/chat/completions"},
@@ -207,12 +208,23 @@ def show_status():
             data = json.loads(resp.read().decode())
 
             models = []
-            if "models" in data:
+            providers = []
+            if "models" in data and not ep.get("type") == "llama-stack":
                 # Ollama /api/tags format
                 models = [m.get("name", "?") for m in data.get("models", [])]
             elif "data" in data:
-                # OpenAI /v1/models format
-                models = [m.get("id", "?") for m in data.get("data", [])]
+                # OpenAI /v1/models or Llama Stack /v1/models format
+                for m in data.get("data", []):
+                    mid = m.get("id", "?")
+                    meta = m.get("custom_metadata", {})
+                    provider_id = meta.get("provider_id", "")
+                    provider_res = meta.get("provider_resource_id", "")
+                    if provider_id:
+                        models.append(f"{mid}  (provider: {provider_id})")
+                        if provider_id not in [p.get("id") for p in providers]:
+                            providers.append({"id": provider_id, "resource": provider_res})
+                    else:
+                        models.append(mid)
             elif "status" in data:
                 # llama.cpp /health format — check /v1/models for model info
                 try:
@@ -237,11 +249,32 @@ def show_status():
                     models = ["(model loaded)"]
 
             status = "UP"
-            print(f"  {status:4s}  {ep['name']:15s}  {ep['url']}")
+            label = ep['name']
+            if ep.get("type") == "llama-stack":
+                label += " (Llama Stack)"
+            print(f"  {status:4s}  {label:25s}  {ep['url']}")
             print(f"        Endpoint: {ep['url']}{ep['api']}")
             if models:
                 for m in models:
                     print(f"        Model:    {m}")
+            if providers:
+                # Show backend info for Llama Stack
+                for p in providers:
+                    try:
+                        # Try to get provider config from Llama Stack /v1/providers
+                        presp = urllib.request.urlopen(ep["url"] + "/v1/providers", timeout=3)
+                        pdata = json.loads(presp.read().decode())
+                        for prov in pdata.get("data", []):
+                            if prov.get("provider_id") == p["id"]:
+                                ptype = prov.get("provider_type", "")
+                                pconfig = prov.get("config", {})
+                                backend_url = pconfig.get("url", "")
+                                print(f"        Provider: {p['id']} ({ptype})")
+                                if backend_url:
+                                    print(f"        Backend:  {backend_url}")
+                                break
+                    except Exception:
+                        print(f"        Provider: {p['id']}")
             print()
             found += 1
 

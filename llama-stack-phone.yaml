@@ -1,0 +1,21 @@
+version: 2
+image_name: starter
+
+apis:
+  - inference
+
+providers:
+  inference:
+    - provider_id: phone-llm
+      provider_type: remote::llama-cpp-server
+      config:
+        url: http://localhost:8080
+
+models:
+  - model_id: gemma-2-2b
+    provider_id: phone-llm
+    provider_model_id: gemma-2-2b-it-q4_k_m.gguf
+    model_type: llm
+
+server:
+  port: 8321

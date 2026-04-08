@@ -140,6 +140,70 @@ For learning and light use, CPU is perfectly fine.
 
 ---
 
+## Using Llama Stack as a unified API layer
+
+[Llama Stack](https://github.com/meta-llama/llama-stack) gives you a single API that can route to multiple backends — your phone, Ollama, or a cloud provider.
+
+### Quick setup (phone backend)
+
+```bash
+pip install llama-stack
+```
+
+Create `llama-stack-phone.yaml`:
+```yaml
+version: 2
+image_name: starter
+
+apis:
+  - inference
+
+providers:
+  inference:
+    - provider_id: phone-llm
+      provider_type: remote::llama-cpp-server
+      config:
+        url: http://localhost:8080
+
+models:
+  - model_id: gemma-2-2b
+    provider_id: phone-llm
+    provider_model_id: gemma-2-2b-it-q4_k_m.gguf
+    model_type: llm
+
+server:
+  port: 8321
+```
+
+Run it:
+```bash
+llama stack run llama-stack-phone.yaml
+```
+
+Now you have a Llama Stack server on `:8321` routing inference to your phone:
+```bash
+curl http://localhost:8321/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"phone-llm/gemma-2-2b-it-q4_k_m.gguf","messages":[{"role":"user","content":"Hello!"}]}'
+```
+
+### Why Llama Stack?
+
+- **Unified API** — same interface whether the backend is a phone, Ollama, vLLM, or a cloud provider
+- **Provider routing** — add multiple providers and route by model
+- **OpenAI-compatible** — works with any tool that speaks the OpenAI API format
+- **Safety / guardrails** — built-in shields for content filtering
+
+### Check running endpoints
+
+```bash
+python examples/generate-claude-md.py status
+```
+
+Shows all detected endpoints including Llama Stack with provider/backend details.
+
+---
+
 ## Offloading tasks to private metal instead of cloud
 
 Once Ollama is running on your server, you can point any tool that supports OpenAI API to it:
