@@ -18,7 +18,17 @@ A practical guide for engineers who want to run LLMs locally — no cloud, no AP
 
 ## Option 1: Phone (Samsung / Pixel / any ARM64 Android)
 
-See the [hybrid-llm](https://github.com/amastbau/hybrid-llm) repo for full instructions and the deploy script.
+See [README-android.md](README-android.md) for prerequisites (ADB, USB Debugging) and full setup.
+
+Quick version:
+```bash
+# Phone connected via USB with USB Debugging enabled
+python deploy_llm.py
+# Deploys llama.cpp + Gemma 2B to the phone
+# Serves OpenAI-compatible API at http://localhost:8080
+```
+
+**Important:** Ollama is still needed on your PC for embeddings if you use [source-pad](https://github.com/amastbau/source-pad) for RAG. The phone only serves chat completions, not embeddings.
 
 ---
 
