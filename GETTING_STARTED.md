@@ -368,6 +368,82 @@ Base URL: http://<server-ip>:11434/v1
 
 ---
 
+## Phone Performance: LLM Service Mode
+
+When running an LLM on your phone, Android's background apps compete for CPU and memory. You can optimize the phone to act as a dedicated inference server.
+
+### Recommended phone settings
+
+Before deploying the LLM:
+
+1. **Enable Developer Options** (Settings > About > tap Build Number 7 times)
+2. **Enable USB Debugging** (Settings > Developer Options)
+3. **Disable adaptive battery** (Settings > Battery > Battery Protection > off)
+4. **Set Performance mode** (Settings > Battery > Processing Speed > Maximum) — Samsung only
+
+After deploying:
+
+| Setting | How | Why |
+|---------|-----|-----|
+| Screen brightness | Minimum | Save power for inference |
+| Animations | Off | Reduce CPU overhead |
+| Stay awake | While charging | Prevent sleep during inference |
+| Background apps | Kill/disable | Free memory and CPU |
+
+### One-command optimization with Claude Code
+
+Plug your phone in via USB, open Claude Code from the hybrid-llm folder, and run:
+
+```
+/phone-optimize
+```
+
+This skill automatically:
+- Stops and disables 20+ Samsung/Google bloatware packages
+- Kills all background processes
+- Disables animations, dims screen, enables stay-awake
+- Shows before/after telemetry (CPU, memory, temperature)
+- Runs an inference benchmark
+
+To restore everything later:
+```bash
+adb shell "pm list packages -d" | sed 's/package://' | xargs -I{} adb shell pm enable {}
+adb shell "settings put global window_animation_scale 1"
+adb shell "settings put global transition_animation_scale 1"
+adb shell "settings put global animator_duration_scale 1"
+adb shell "settings put system screen_brightness 128"
+```
+
+### What to expect
+
+| Metric | Default Android | LLM Service Mode |
+|--------|----------------|------------------|
+| Available memory | ~650MB | ~850MB (+30%) |
+| llama-server CPU rank | #2-3 | #1 (all threads) |
+| Background apps | 20+ | ~5 (OS only) |
+| Temperature | 40-43C idle | 45-50C under load |
+| Battery drain | ~5%/hr | ~8%/hr (plugged in = fine) |
+
+### Monitoring the phone
+
+Check telemetry while the LLM is running:
+```bash
+# Top processes
+adb shell "top -n 1 -b -q | head -10"
+
+# CPU load and memory
+adb shell "cat /proc/loadavg"
+adb shell "cat /proc/meminfo | grep MemAvailable"
+
+# Battery and temperature
+adb shell "dumpsys battery" | grep -E "level:|temperature:"
+
+# LLM process specifically
+adb shell "ps -A | grep llama-server"
+```
+
+---
+
 ## Troubleshooting
 
 ```bash
