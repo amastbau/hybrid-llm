@@ -32,7 +32,49 @@ python deploy_llm.py
 
 ---
 
-## Option 2: PC / Local Server
+## Windows Setup
+
+### Ollama (PC)
+
+1. Download from [ollama.com/download/windows](https://ollama.com/download/windows)
+2. Run the installer
+3. Open a terminal (PowerShell or CMD):
+```
+ollama pull gemma2:2b
+ollama run gemma2:2b
+```
+
+Done. API is at `http://localhost:11434/v1/chat/completions`.
+
+### Phone LLM from Windows
+
+1. Install [Android SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools) (extract the zip, add to PATH)
+2. Enable USB Debugging on your phone (Settings > Developer Options)
+3. Connect phone via USB, allow the debug prompt
+4. Install Python from [python.org](https://www.python.org/downloads/)
+5. Run:
+```
+python deploy_llm.py
+```
+
+That's it. Same as Linux — the script handles everything.
+
+### source-pad on Windows
+
+```
+pip install uv
+git clone https://github.com/amastbau/source-pad.git
+cd source-pad
+uv sync
+copy .env.example .env
+source-pad serve
+```
+
+Open `http://localhost:8090`.
+
+---
+
+## Option 2: PC / Local Server (Linux/Mac)
 
 ### Step 1: Install Ollama (easiest way)
 
