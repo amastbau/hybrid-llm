@@ -30,9 +30,11 @@ python deploy_llm.py
 
 **Important:** Ollama is still needed on your PC for embeddings if you use [source-pad](https://github.com/amastbau/source-pad) for RAG. The phone only serves chat completions, not embeddings.
 
-### Wireless mode (no cable after setup)
+### Wireless mode (experimental — no cable after setup)
 
-The initial deploy requires USB to push the binary and model. After that, the server listens on all interfaces — you can unplug the cable and access it over WiFi:
+> **Warning:** In testing, Android kills the llama-server process shortly after USB is disconnected, even with "Stay awake" enabled. The USB connection appears to keep the process alive. For reliable use, **keep the phone connected via USB**. Wireless mode may work if you configure all the tips below, but is not guaranteed.
+
+The initial deploy requires USB to push the binary and model. After that, the server listens on all interfaces — you can try unplugging the cable and accessing it over WiFi:
 
 ```bash
 # During deploy, the script shows the WiFi endpoint:
