@@ -185,37 +185,126 @@ Output ONLY the CLAUDE.md content in markdown. No explanation around it."""
     return content
 
 
+KNOWN_ENDPOINTS = [
+    {"name": "Ollama", "url": "http://localhost:11434", "health": "/api/tags", "api": "/v1/chat/completions"},
+    {"name": "Phone (USB)", "url": "http://localhost:8080", "health": "/health", "api": "/v1/chat/completions"},
+    {"name": "Phone (alt)", "url": "http://localhost:8081", "health": "/health", "api": "/v1/chat/completions"},
+    {"name": "LM Studio", "url": "http://localhost:1234", "health": "/v1/models", "api": "/v1/chat/completions"},
+    {"name": "llama.cpp", "url": "http://localhost:8082", "health": "/health", "api": "/v1/chat/completions"},
+]
+
+
+def show_status():
+    """Show all currently running LLM endpoints."""
+    print()
+    print("  Scanning for running LLM endpoints...")
+    print()
+    found = 0
+
+    for ep in KNOWN_ENDPOINTS:
+        try:
+            resp = urllib.request.urlopen(ep["url"] + ep["health"], timeout=3)
+            data = json.loads(resp.read().decode())
+
+            models = []
+            if "models" in data:
+                # Ollama /api/tags format
+                models = [m.get("name", "?") for m in data.get("models", [])]
+            elif "data" in data:
+                # OpenAI /v1/models format
+                models = [m.get("id", "?") for m in data.get("data", [])]
+            elif "status" in data:
+                # llama.cpp /health format — check /v1/models for model info
+                try:
+                    mresp = urllib.request.urlopen(ep["url"] + "/v1/models", timeout=3)
+                    mdata = json.loads(mresp.read().decode())
+                    for m in mdata.get("data", []):
+                        mid = m.get("id", "")
+                        if mid:
+                            meta = m.get("meta", {})
+                            params = meta.get("n_params", 0)
+                            size = meta.get("size", 0)
+                            info = mid
+                            if params:
+                                info += f"  ({params/1e9:.1f}B params"
+                                if size:
+                                    info += f", {size/1e9:.1f}GB"
+                                info += ")"
+                            models.append(info)
+                except Exception:
+                    pass
+                if not models:
+                    models = ["(model loaded)"]
+
+            status = "UP"
+            print(f"  {status:4s}  {ep['name']:15s}  {ep['url']}")
+            print(f"        Endpoint: {ep['url']}{ep['api']}")
+            if models:
+                for m in models:
+                    print(f"        Model:    {m}")
+            print()
+            found += 1
+
+        except Exception:
+            pass
+
+    if found == 0:
+        print("  No running LLM endpoints found.")
+        print()
+        print("  Start one with:")
+        print("    ollama serve                          # Ollama on :11434")
+        print("    python deploy_llm.py                  # Phone on :8080")
+        print("    lms server start                      # LM Studio on :1234")
+    else:
+        print(f"  {found} endpoint(s) found.")
+    print()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate CLAUDE.md using a local LLM")
-    parser.add_argument("project_path", help="Path to the project directory")
-    parser.add_argument("--endpoint", default=DEFAULT_ENDPOINT,
-                        help=f"OpenAI-compatible API endpoint (default: {DEFAULT_ENDPOINT})")
-    parser.add_argument("--model", default=DEFAULT_MODEL,
-                        help=f"Model to use (default: {DEFAULT_MODEL})")
-    parser.add_argument("--write", action="store_true",
-                        help="Write CLAUDE.md to the project directory (otherwise just prints)")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # Default: generate command
+    gen_parser = subparsers.add_parser("generate", help="Generate a CLAUDE.md for a project")
+    gen_parser.add_argument("project_path", help="Path to the project directory")
+    gen_parser.add_argument("--endpoint", default=DEFAULT_ENDPOINT,
+                            help=f"OpenAI-compatible API endpoint (default: {DEFAULT_ENDPOINT})")
+    gen_parser.add_argument("--model", default=DEFAULT_MODEL,
+                            help=f"Model to use (default: {DEFAULT_MODEL})")
+    gen_parser.add_argument("--write", action="store_true",
+                            help="Write CLAUDE.md to the project directory (otherwise just prints)")
+
+    # Status command
+    subparsers.add_parser("status", help="Show currently running LLM endpoints")
+
     args = parser.parse_args()
 
-    project_path = os.path.abspath(args.project_path)
-    if not os.path.isdir(project_path):
-        print(f"ERROR: {project_path} is not a directory")
-        sys.exit(1)
+    if args.command == "status":
+        show_status()
+    elif args.command == "generate":
+        project_path = os.path.abspath(args.project_path)
+        if not os.path.isdir(project_path):
+            print(f"ERROR: {project_path} is not a directory")
+            sys.exit(1)
 
-    print(f"\nGenerating CLAUDE.md for: {project_path}\n")
+        print(f"\nGenerating CLAUDE.md for: {project_path}\n")
 
-    content = generate_claude_md(project_path, args.endpoint, args.model)
+        content = generate_claude_md(project_path, args.endpoint, args.model)
 
-    if args.write:
-        out = os.path.join(project_path, "CLAUDE.md")
-        with open(out, "w") as f:
-            f.write(content + "\n")
-        print(f"Written to: {out}")
-        print("Review and edit before committing — local models aren't perfect!")
+        if args.write:
+            out = os.path.join(project_path, "CLAUDE.md")
+            with open(out, "w") as f:
+                f.write(content + "\n")
+            print(f"Written to: {out}")
+            print("Review and edit before committing — local models aren't perfect!")
+        else:
+            print("=" * 60)
+            print(content)
+            print("=" * 60)
+            print("\nRun with --write to save to CLAUDE.md")
     else:
-        print("=" * 60)
-        print(content)
-        print("=" * 60)
-        print("\nRun with --write to save to CLAUDE.md")
+        # No subcommand — show status by default
+        show_status()
 
 
 if __name__ == "__main__":
